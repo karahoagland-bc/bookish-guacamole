@@ -1,0 +1,27 @@
+name: Backport
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  backport:
+    name: Backport
+    runs-on: ubuntu-latest
+    if: >
+      github.event.pull_request.merged
+    steps:
+      - name: LFS Skip
+        # skips LFS sync so artificatory credentials are not required
+        run: git config --global filter.lfs.smudge "git-lfs smudge --skip -- %f" && git config --global filter.lfs.process "git-lfs filter-process --skip"
+      - name: Backport
+        uses: tibdex/backport@v2.0.2
+        with:
+          labels_template: '[ "Backport" ]'
+          title_template: '<%= title %> (Backport #<%= number %>)'
+          body_template: |
+            Backport <%= mergeCommitSha %> from #<%= number %>. You must remove and re-add the Backport label for the CI to run.
+            Please review the [docs](https://internal-docs.brainos.dev/releases/cloud/#cloud-backports) about backports. Remember to merge backports with multiple commits and squash merge backports with a single commit.
+            Checklist:
+            - [ ] TODO: add checklist
+          github_token: ${{ secrets.GITHUB_TOKEN }}
